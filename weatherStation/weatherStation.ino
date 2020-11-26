@@ -1,6 +1,10 @@
+//Contorul pentru secunda
+int timerCounter = 0;
+
+
 void setup() {
 
- //Setarea Timer/Counter Control Register A in modul CTC
+  //Setarea Timer/Counter Control Register A in modul CTC
   //CTC - CLEAR TIMER ON COMPARE MATCH
   //Reseteaza timerul cand ajunge la o anumita valoare care se afla in registrul OCR0A
   TCCR0A=0b00000010;  
@@ -17,9 +21,23 @@ void setup() {
   
   //Setam prescaler-ul la clock/64
   TCCR0B=0b00000011; 
+ }
+
+//Implementarea proprie pentru functie de delay
+//Timpul este reprezentat in ms!
+void myDelay (int time){
+  while(time > timerCounter ){
+  }
+  if(timerCounter == time){
+    timerCounter=0;}
 }
 
-void loop() {
+ void loop() {
   // put your main code here, to run repeatedly:
+}
 
+//Cand apare o cerere de intrerupere, timerCounter se incrementeaza
+//Timer/Counter0 Compare Match A (Vectorul numarul 15)
+ISR(TIMER0_COMPA_vect){ 
+  timerCounter++;
 }
