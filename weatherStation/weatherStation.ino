@@ -1,10 +1,13 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
 //Variabile pentru ESP8266 
 String ssid     = "Simulator Wifi";    // SSID 
 String password = "";           //WiFi-ul virtual nu are o parola prestabilita in ThinkerCAD
 String host     = "api.thingspeak.com"; //API
 const int httpPort   = 80;        //Portul pe care se trimit datele
-String tempURL     = "/update?api_key=ZOPP08IZU17W667D&field2=0"; 
-
+String tempURL     = "/update?api_key=ZOPP08IZU17W667D&field1=0"; 
+String lightURL    = "/update?api_key=ZOPP08IZU17W667D&field2=0";
 
 //Contorul pentru secunda
 volatile int timerCounter = 0;
@@ -29,9 +32,11 @@ int setupESP8266(void) {
   return 0;
 }
 
-void readTemp(void) {
+int readTemp(void) {
+  myDelay(20000);
   int temp = map(analogRead(A0),20,358,-40,125);
   sendDataToThingSpeak(tempURL,temp);
+  return temp;
 }
 
 void sendDataToThingSpeak(String URL, int value){
@@ -49,7 +54,6 @@ void sendDataToThingSpeak(String URL, int value){
   Serial.print(httpPacket);
   myDelay(10); //Adaugam un delay pentru ca ESP8266 sa aiba timp sa raspunda
   if (!Serial.find("SEND OK\r\n")) return;
-
 }
 
 void setupTIMMER2(void){
@@ -72,10 +76,20 @@ void setupTIMMER2(void){
     TCCR2B=0b00000100; 
   }
 
+void setupLCD(){
+  lcd.begin(16, 2);
+    lcd.setCursor(2, 0);
+    //Afisam temperatura
+    lcd.print("Initializare");
+}
+
 void setup() {
   setupESP8266();
   setupTIMMER2();  
-  pinMode(13, OUTPUT);
+  pinMode(13, OUTPUT);  
+  setupLCD();
+  pinMode(A0,INPUT);
+  pinMode(A1,INPUT);
 }
 
 //Implementarea proprie pentru functie de delay
@@ -87,12 +101,43 @@ void myDelay (int time){
   timerCounter=0;
 }
 
+int light(){
+  myDelay(20000);
+  int light=analogRead(A1);
+  light/=100;
+  sendDataToThingSpeak(lightURL,light);
+  return light;
+}
+
+void printOnLCD(int temp, int light){
+  
+  //Curatam display-ul  
+  lcd.clear();
+  //Pozitionam cursorul pe prima linie si a doua coloana
+  lcd.setCursor(1, 0);
+  //Afisam temperatura
+  lcd.print("Temp: ");
+  lcd.print(temp);
+  //Pozitionam cursorul pe a doua linie si a doua coloana
+  lcd.setCursor(1, 1);
+  //Afisam indexul iluminarii ambientale
+  lcd.print("Light: ");
+  lcd.print(light);
+}
+
 void loop() {
- Serial.println("Am intrat din loop");
- readTemp();
- myDelay(10000);
+ //Serial.println("Am intrat din loop");
+ //int temp1 = readTemp();
+ //ThingSpeak varianta free suport un update la fiecare
+ //15 secunde, de aceea am pus un delay mai mare intre fiecare 
+ //request de update catre ThingSpeak
+ //delay(20000);
+ //int light1 = light();
+ //delay(20000);
+ printOnLCD(readTemp(),light());
+ //myDelay(10000);
  digitalWrite(13,LOW); 
-  Serial.println("Am iesit din loop");
+ //Serial.println("Am iesit din loop");
 }
 
 //Cand apare o cerere de intrerupere, timerCounter se incrementeaza
