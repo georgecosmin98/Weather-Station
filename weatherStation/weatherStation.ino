@@ -6,8 +6,7 @@ String ssid     = "Simulator Wifi";    // SSID
 String password = "";           //WiFi-ul virtual nu are o parola prestabilita in ThinkerCAD
 String host     = "api.thingspeak.com"; //API
 const int httpPort   = 80;        //Portul pe care se trimit datele
-String tempURL     = "/update?api_key=ZOPP08IZU17W667D&field1=0"; 
-String lightURL    = "/update?api_key=ZOPP08IZU17W667D&field2=0";
+String URL     = "/update?api_key=ZOPP08IZU17W667D&field1=0"; 
 
 //Contorul pentru secunda
 volatile int timerCounter = 0;
@@ -33,15 +32,13 @@ int setupESP8266(void) {
 }
 
 int readTemp(void) {
-  myDelay(20000);
   int temp = map(analogRead(A0),20,358,-40,125);
-  sendDataToThingSpeak(tempURL,temp);
   return temp;
 }
 
-void sendDataToThingSpeak(String URL, int value){
+void sendAllDataToThingSpeak(String URL, int temp, int light){
   // Construire call/request HTTP
-  String httpPacket = "GET " + URL + String(value) + " HTTP/1.1\r\nHost: " + host + "\r\n\r\n";
+  String httpPacket = "GET " + URL + String(temp) + "&field2=" + String(light) + " HTTP/1.1\r\nHost: " + host + "\r\n\r\n";
   int length = httpPacket.length();
   
   // Trimitem lungimea mesajului
@@ -79,7 +76,7 @@ void setupTIMMER2(void){
 void setupLCD(){
   lcd.begin(16, 2);
     lcd.setCursor(2, 0);
-    //Afisam temperatura
+    //Afisam un mesaj scurt de initializare
     lcd.print("Initializare");
 }
 
@@ -101,15 +98,13 @@ void myDelay (int time){
   timerCounter=0;
 }
 
-int light(){
-  myDelay(20000);
+int readLightIndex(){
   int light=analogRead(A1);
   light/=100;
-  sendDataToThingSpeak(lightURL,light);
   return light;
 }
 
-void printOnLCD(int temp, int light){
+void printOnLCD(int temp, int lightIndex){
   
   //Curatam display-ul  
   lcd.clear();
@@ -122,22 +117,14 @@ void printOnLCD(int temp, int light){
   lcd.setCursor(1, 1);
   //Afisam indexul iluminarii ambientale
   lcd.print("Light: ");
-  lcd.print(light);
+  lcd.print(lightIndex);
 }
 
 void loop() {
- //Serial.println("Am intrat din loop");
- //int temp1 = readTemp();
- //ThingSpeak varianta free suport un update la fiecare
- //15 secunde, de aceea am pus un delay mai mare intre fiecare 
- //request de update catre ThingSpeak
- //delay(20000);
- //int light1 = light();
- //delay(20000);
- printOnLCD(readTemp(),light());
- //myDelay(10000);
+ printOnLCD(readTemp(),readLightIndex());
+ sendAllDataToThingSpeak(URL, readTemp(),readLightIndex());
+ myDelay(15000);
  digitalWrite(13,LOW); 
- //Serial.println("Am iesit din loop");
 }
 
 //Cand apare o cerere de intrerupere, timerCounter se incrementeaza
