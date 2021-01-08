@@ -13,17 +13,17 @@ SoftwareSerial esp8266(RX_pin,TX_pin);
 
 void ESP8266_setup() 
 {
-  Serial.begin(9600);
+  Serial.begin(9600); 
   esp8266.begin(115200);
   sendCommand("AT", 5, "OK");
   sendCommand("AT+CWMODE=1", 5, "OK");
   sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
 }
 
-void sendAllDataToThingSpeak(int tempValue, int humidityValue, int brightnessValue)
+void sendAllDataToThingSpeak(double tempValue, int humidityValue, int brightnessValue, double pressureValue, double externTempValue)
 {
-
-  String getData = "GET /update?api_key=" + API + "&field1=" + String(tempValue) + "&field2=" + String(humidityValue) + "&field3=" + String(brightnessValue);
+  String getData = "GET /update?api_key=" + API + "&field1=" + String(tempValue) + "&field2=" + String(humidityValue) + "&field3=" 
+                   + String(brightnessValue) + "&field4=" + String(pressureValue) + "&field5=" + String(externTempValue);
   sendCommand("AT+CIPMUX=1", 5, "OK");
   sendCommand("AT+CIPSTART=0,\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
   sendCommand("AT+CIPSEND=0," + String(getData.length() + 4), 4, ">");

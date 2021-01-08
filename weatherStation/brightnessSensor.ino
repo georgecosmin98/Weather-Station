@@ -1,6 +1,6 @@
-#define Brightness_pin A1
+#define Brightness_pin A2
 
 void getBrightnessValue()
 {
-  brightness = analogRead(Brightness_pin)/4;
+  brightness = myAnalogRead(Brightness_pin)/4;
 }

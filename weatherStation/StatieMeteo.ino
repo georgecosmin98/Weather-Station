@@ -1,10 +1,11 @@
 int countTrueCommand;
 int countTimeCommand;
 boolean found = false;
-volatile int temperature;
+volatile double temperature;
 volatile int humidity;
 volatile int brightness;
-volatile int pressure;
+volatile double pressure;
+volatile double external_temp;
 volatile int timerCounter = 0;
 
 void setup()
@@ -13,16 +14,22 @@ void setup()
   pinMode(A1,INPUT);
   myDelay_setup();
   ESP8266_setup();
-  BME280_setup();
+  BMP180_setup();
+  DS18B20_setup();
   LCD_setup();
 }
 
 void loop()
 {
-  getDHTvalue();
-  getBrightnessValue();
-  getBMEvalue();
+  temperature = -1;
+  while(!verifyDataIntegrity())
+  {
+    getDHTvalue();
+    getBrightnessValue();
+    getBMPvalue();
+    getExternalTempValue();
+    myDelay(2000); 
+  }
+  sendAllDataToThingSpeak(temperature, humidity, brightness, pressure, external_temp);
   LCDrefresh();
-  sendAllDataToThingSpeak(temperature, humidity, brightness);
-  myDelay(1000);
 }
